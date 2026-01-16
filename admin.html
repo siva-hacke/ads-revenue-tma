@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Ads Revenue Admin</title>
+    <style>
+        body { font-family: Arial; padding: 20px; max-width: 800px; margin: 0 auto; }
+        .section { margin: 20px 0; padding: 20px; border: 1px solid #ccc; border-radius: 10px; }
+        input, select { padding: 10px; margin: 5px; width: 200px; border: 1px solid #ccc; border-radius: 5px; }
+        button { padding: 10px 20px; background: #4361ee; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #3a0ca3; }
+        .result { margin-top: 10px; padding: 10px; border-radius: 5px; }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+    </style>
+</head>
+<body>
+    <h1>🔐 Ads Revenue Admin Panel</h1>
+    <p>Access: <a href="https://siva-hacke.github.io/ads-revenue-tma/admin.html" target="_blank">https://siva-hacke.github.io/ads-revenue-tma/admin.html</a></p>
+    
+    <div class="section">
+        <h3>💰 Update User Balance</h3>
+        <input type="text" id="telegramId" placeholder="Telegram ID">
+        <input type="number" id="amount" placeholder="Amount">
+        <select id="action">
+            <option value="add">Add Coins</option>
+            <option value="subtract">Subtract Coins</option>
+        </select>
+        <input type="text" id="reason" placeholder="Reason">
+        <button onclick="updateBalance()">Update Balance</button>
+        <div id="balanceResult" class="result"></div>
+    </div>
+    
+    <div class="section">
+        <h3>👤 Search User</h3>
+        <input type="text" id="searchInput" placeholder="Telegram ID or Username">
+        <button onclick="searchUser()">Search</button>
+        <div id="userResult" class="result"></div>
+    </div>
+    
+    <div class="section">
+        <h3>⚙️ Update Settings</h3>
+        <div>
+            <label>Adexora Reward:</label>
+            <input type="number" id="adexoraReward" value="2">
+            <button onclick="updateSetting('adexora_reward')">Update</button>
+        </div>
+        <div>
+            <label>Min Withdrawal:</label>
+            <input type="number" id="minWithdrawal" value="2500">
+            <button onclick="updateSetting('min_amount')">Update</button>
+        </div>
+    </div>
+    
+    <script>
+        // Firebase config - SAME AS YOUR TMA
+        const firebaseConfig = {
+            apiKey: "AIzaSyBh7skcRxAdjw6z9JA5OeKW0PXJd1UKumY",
+            authDomain: "adsrevenuetma.firebaseapp.com",
+            projectId: "adsrevenuetma",
+            storageBucket: "adsrevenuetma.firebasestorage.app",
+            messagingSenderId: "5961275180",
+            appId: "1:5961275180:web:81d544b0e63d455272be89"
+        };
+        
+        // Initialize Firebase
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const db = firebase.firestore();
+        
+        // Manual admin functions
+        async function updateBalance() {
+            const telegramId = document.getElementById('telegramId').value;
+            const amount = parseInt(document.getElementById('amount').value);
+            const action = document.getElementById('action').value;
+            const reason = document.getElementById('reason').value;
+            
+            if (!telegramId || !amount) {
+                showResult('Enter Telegram ID and amount', 'error');
+                return;
+            }
+            
+            // Find user by telegramId
+            const usersRef = db.collection('users');
+            const querySnapshot = await usersRef.where('telegramId', '==', telegramId).get();
+            
+            if (querySnapshot.empty) {
+                showResult('User not found', 'error');
+                return;
+            }
+            
+            const userDoc = querySnapshot.docs[0];
+            const userRef = userDoc.ref;
+            const userData = userDoc.data();
+            
+            const finalAmount = action === 'add' ? amount : -amount;
+            const newBalance = (userData.balance || 0) + finalAmount;
+            
+            if (newBalance < 0) {
+                showResult('Balance cannot be negative', 'error');
+                return;
+            }
+            
+            await userRef.update({
+                balance: newBalance,
+                totalEarned: (userData.totalEarned || 0) + (finalAmount > 0 ? finalAmount : 0)
+            });
+            
+            // Log the action
+            await db.collection('admin_logs').add({
+                telegramId: telegramId,
+                action: action,
+                amount: finalAmount,
+                reason: reason,
+                timestamp: new Date().toISOString(),
+                admin: 'manual'
+            });
+            
+            showResult(`✅ Updated! User: ${telegramId}<br>New balance: ${newBalance} ACR`, 'success');
+        }
+        
+        async function searchUser() {
+            const search = document.getElementById('searchInput').value;
+            const usersRef = db.collection('users');
+            let querySnapshot;
+            
+            if (search.startsWith('@')) {
+                querySnapshot = await usersRef.where('username', '==', search.substring(1)).get();
+            } else {
+                querySnapshot = await usersRef.where('telegramId', '==', search).get();
+            }
+            
+            if (querySnapshot.empty) {
+                showResult('User not found', 'error', 'userResult');
+                return;
+            }
+            
+            const userDoc = querySnapshot.docs[0];
+            const userData = userDoc.data();
+            
+            const userInfo = `
+                <strong>User Found:</strong><br>
+                Telegram ID: ${userData.telegramId}<br>
+                Username: @${userData.username || 'none'}<br>
+                Name: ${userData.firstName || ''} ${userData.lastName || ''}<br>
+                Balance: ${userData.balance || 0} ACR<br>
+                Total Earned: ${userData.totalEarned || 0} ACR<br>
+                Total Ads: ${userData.totalAds || 0}<br>
+                Joined: ${new Date(userData.joinedAt).toLocaleDateString()}
+            `;
+            
+            showResult(userInfo, 'success', 'userResult');
+        }
+        
+        async function updateSetting(settingName) {
+            let value;
+            let settingPath;
+            
+            if (settingName === 'adexora_reward') {
+                value = parseInt(document.getElementById('adexoraReward').value);
+                settingPath = 'ad_settings';
+            } else if (settingName === 'min_amount') {
+                value = parseInt(document.getElementById('minWithdrawal').value);
+                settingPath = 'withdrawal_settings';
+            }
+            
+            if (!value || value < 0) {
+                showResult('Invalid value', 'error');
+                return;
+            }
+            
+            const settingRef = db.collection('settings').doc(settingPath);
+            const settingDoc = await settingRef.get();
+            
+            if (settingDoc.exists) {
+                await settingRef.update({
+                    [settingName]: value
+                });
+                showResult(`✅ Updated ${settingName} to ${value}`, 'success');
+            } else {
+                showResult('Settings document not found', 'error');
+            }
+        }
+        
+        function showResult(message, type, elementId = 'balanceResult') {
+            const element = document.getElementById(elementId);
+            element.innerHTML = message;
+            element.className = `result ${type}`;
+            setTimeout(() => element.innerHTML = '', 5000);
+        }
+        
+        // Load current settings
+        async function loadSettings() {
+            const settingsRef = db.collection('settings').doc('ad_settings');
+            const settingsDoc = await settingsRef.get();
+            
+            if (settingsDoc.exists) {
+                const data = settingsDoc.data();
+                document.getElementById('adexoraReward').value = data.adexora_reward || 2;
+            }
+            
+            const withdrawalRef = db.collection('settings').doc('withdrawal_settings');
+            const withdrawalDoc = await withdrawalRef.get();
+            
+            if (withdrawalDoc.exists) {
+                const data = withdrawalDoc.data();
+                document.getElementById('minWithdrawal').value = data.min_amount || 2500;
+            }
+        }
+        
+        // Load settings on page load
+        loadSettings();
+    </script>
+</body>
+</html>
