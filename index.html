@@ -1,0 +1,2645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ads-Revenue TMA</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Telegram Web App SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js"></script>
+    <!-- Onclika Ad SDK -->
+    <script src="https://js.onclckvd.com/in-stream-ad-admanager/tma.js"></script>
+    <!-- Adexora Ad SDK -->
+    <script src="https://adexora.com/cdn/ads.js?id=1788"></script>
+    <!-- Adexium Ad SDK -->
+    <script src="https://cdn.adexium.tech/assets/js/adexium-widget.min.js"></script>
+    <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3a0ca3;
+            --accent: #f72585;
+            --success: #4cc9f0;
+            --warning: #ff9e00;
+            --danger: #ef233c;
+            --dark: #212529;
+            --light: #f8f9fa;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+        
+        .main-container {
+            max-width: 500px;
+            margin: 20px auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+        }
+        
+        /* Notification Bell */
+        .notification-bell {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            z-index: 100;
+        }
+        
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: var(--accent);
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .balance-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+        
+        .nav-tabs {
+            background: var(--light);
+            border-bottom: 2px solid #e9ecef;
+        }
+        
+        .nav-link {
+            color: var(--dark);
+            font-weight: 500;
+            border: none;
+            padding: 12px 10px;
+            font-size: 13px;
+        }
+        
+        .nav-link.active {
+            background: var(--primary) !important;
+            color: white !important;
+            border-radius: 10px 10px 0 0;
+        }
+        
+        .tab-content {
+            padding: 20px;
+        }
+        
+        .feature-card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            margin-bottom: 15px;
+            transition: transform 0.3s;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-3px);
+        }
+        
+        .btn-primary {
+            background: var(--primary);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary:hover {
+            background: var(--secondary);
+            transform: translateY(-2px);
+        }
+        
+        .btn-success {
+            background: var(--success);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .btn-accent {
+            background: var(--accent);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+        
+        .btn-disabled {
+            background: #ccc !important;
+            cursor: not-allowed !important;
+            opacity: 0.7;
+        }
+        
+        .btn-telegram {
+            background: #0088cc;
+            border: none;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 8px;
+            font-weight: 500;
+            font-size: 14px;
+        }
+        
+        .ad-item {
+            border-left: 4px solid var(--warning);
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 10px;
+            background: var(--light);
+        }
+        
+        .ad-item.adexora {
+            border-left-color: #4361ee;
+        }
+        
+        .ad-item.onclika {
+            border-left-color: #ff9e00;
+        }
+        
+        .ad-item.adexium {
+            border-left-color: #ef233c;
+        }
+        
+        .ad-item.disabled-ad {
+            opacity: 0.6;
+            border-left-color: #999;
+        }
+        
+        .ad-item.disabled-ad .btn {
+            background: #999 !important;
+            cursor: not-allowed;
+        }
+        
+        .progress {
+            height: 8px;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+        
+        .progress-bar {
+            border-radius: 4px;
+        }
+        
+        /* Notification Modal */
+        .notification-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+        
+        .notification-modal-content {
+            background: white;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 400px;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+        
+        .notification-item {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+        
+        .notification-item.unread {
+            background: #f0f8ff;
+        }
+        
+        .notification-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            flex-shrink: 0;
+        }
+        
+        .notification-icon.success {
+            background: var(--success);
+        }
+        
+        .notification-icon.warning {
+            background: var(--warning);
+        }
+        
+        .notification-icon.info {
+            background: var(--primary);
+        }
+        
+        .notification-icon.error {
+            background: var(--danger);
+        }
+        
+        .notification-time {
+            font-size: 12px;
+            color: #999;
+            margin-top: 5px;
+        }
+        
+        .notification-overlay {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            max-width: 300px;
+            display: none;
+        }
+        
+        .user-profile-card {
+            padding: 20px;
+        }
+        
+        .profile-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 32px;
+            overflow: hidden;
+            margin-right: 15px;
+        }
+        
+        .profile-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .profile-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .profile-info h4 {
+            margin-bottom: 5px;
+        }
+        
+        .profile-info p {
+            margin-bottom: 5px;
+            color: #666;
+        }
+        
+        /* UPDATED STATS GRID - 3x2 Layout */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .stat-item {
+            background: white;
+            padding: 12px 8px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+        }
+        
+        .stat-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--primary);
+        }
+        
+        .stat-label {
+            font-size: 11px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+        
+        .loading-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+        }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .ads-counter {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: bold;
+            background: var(--primary);
+            color: white;
+            margin-left: 5px;
+        }
+        
+        .cooldown-timer {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: bold;
+            background: var(--danger);
+            color: white;
+            margin-left: 5px;
+        }
+        
+        .ads-info {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+            font-size: 14px;
+            padding: 8px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .info-row:last-child {
+            border-bottom: none;
+        }
+        
+        .info-label {
+            color: #666;
+        }
+        
+        .info-value {
+            font-weight: 500;
+        }
+        
+        /* Withdrawal Input Style */
+        .withdrawal-input-group {
+            position: relative;
+            margin: 15px 0;
+        }
+        
+        .withdrawal-input {
+            width: 100%;
+            padding: 15px 20px;
+            border-radius: 12px;
+            border: 2px solid #e0e0e0;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        
+        .withdrawal-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+            outline: none;
+        }
+        
+        .withdrawal-input::placeholder {
+            color: #999;
+        }
+        
+        .input-prefix {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-weight: bold;
+            color: #666;
+        }
+        
+        .withdrawal-calc {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            border: 1px solid #e9ecef;
+        }
+        
+        .withdrawal-calc-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 8px 0;
+            font-size: 14px;
+        }
+        
+        .withdrawal-calc-row.total {
+            border-top: 2px solid #e9ecef;
+            padding-top: 10px;
+            margin-top: 10px;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        
+        .ad-reward-notification {
+            display: inline-block;
+            padding: 3px 8px;
+            background: rgba(76, 201, 240, 0.1);
+            border: 1px solid var(--success);
+            border-radius: 10px;
+            font-size: 12px;
+            margin-left: 5px;
+        }
+        
+        /* Withdrawal History Item */
+        .withdrawal-history-item {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .withdrawal-history-item:last-child {
+            border-bottom: none;
+        }
+        
+        .withdrawal-time {
+            font-size: 11px;
+            color: #888;
+            margin-top: 3px;
+        }
+        
+        .withdrawal-ton {
+            font-size: 12px;
+            color: #4361ee;
+            margin-top: 2px;
+        }
+        
+        /* Support Links */
+        .support-link {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            border-radius: 10px;
+            background: #f8f9fa;
+            margin-bottom: 10px;
+            border: 1px solid #e9ecef;
+            text-decoration: none;
+            color: #333;
+            transition: all 0.3s;
+        }
+        
+        .support-link:hover {
+            background: #e9ecef;
+            transform: translateY(-2px);
+        }
+        
+        .support-icon {
+            width: 40px;
+            height: 40px;
+            background: #0088cc;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            margin-right: 15px;
+            font-size: 18px;
+        }
+        
+        /* Task Items */
+        .task-item {
+            padding: 15px;
+            border-radius: 10px;
+            background: white;
+            margin-bottom: 15px;
+            border: 1px solid #e9ecef;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        
+        .task-reward {
+            background: var(--success);
+            color: white;
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        
+        /* Promo Channel Button */
+        .promo-channel-btn {
+            background: linear-gradient(135deg, #0088cc, #00a8ff);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            margin: 15px 0;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        
+        .promo-channel-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,136,204,0.3);
+            color: white;
+        }
+        
+        /* Toast Animation */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes fadeOut {
+            from { opacity: 1; transform: translateY(0); }
+            to { opacity: 0; transform: translateY(-20px); }
+        }
+    </style>
+</head>
+<body>
+    <!-- WEB ACCESS BLOCKER - DO NOT REMOVE -->
+    <script>
+    (function() {
+      if (window.Telegram && window.Telegram.WebApp) {
+        const platform = window.Telegram.WebApp.platform || 'unknown';
+        const blockedPlatforms = ['web', 'webk', 'weba', 'unknown'];
+        
+        if (blockedPlatforms.includes(platform.toLowerCase())) {
+          window.Telegram.WebApp.showAlert(
+            "⚠️ Access Restricted\n\n" +
+            "This application is only accessible via Telegram Mobile App.\n" +
+            "Please use Telegram Mobile App (Android/iOS) to access this service.\n\n" +
+            "Platform detected: " + platform.toUpperCase(),
+            function() {
+              window.Telegram.WebApp.close();
+            }
+          );
+          
+          document.body.innerHTML = `
+            <div style="
+              height: 100vh;
+              display: flex;
+              flex-direction: column;
+              justify-content: center;
+              align-items: center;
+              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+              color: white;
+              padding: 20px;
+              font-family: 'Segoe UI', system-ui, sans-serif;
+              text-align: center;
+              line-height: 1.5;
+            ">
+              <div style="font-size: 64px; margin-bottom: 20px;">🚫</div>
+              <h1 style="font-size: 28px; margin-bottom: 10px; font-weight: 600;">Web Access Blocked</h1>
+              <p style="font-size: 16px; margin-bottom: 5px; max-width: 400px;">
+                This Telegram Mini App is not accessible via web browsers.
+              </p>
+              <p style="font-size: 14px; margin-bottom: 20px; opacity: 0.9;">
+                Please open this link in Telegram Mobile App to continue.
+              </p>
+              <div style="background: rgba(255,255,255,0.1); padding: 12px 20px; border-radius: 12px; margin-top: 20px;">
+                <p style="margin: 0; font-size: 13px; opacity: 0.8;">
+                  Platform Detected: <strong style="color: #ff9e00;">${platform.toUpperCase()}</strong>
+                </p>
+              </div>
+            </div>
+          `;
+          
+          throw new Error('Web platform access blocked');
+        }
+      }
+    })();
+    </script>
+    <!-- END WEB ACCESS BLOCKER -->
+    
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <h4 id="loadingTitle">Loading Ad...</h4>
+            <p class="text-muted" id="loadingMessage">Please wait while we load the advertisement</p>
+            <div class="progress mt-3" style="width: 200px;">
+                <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                     role="progressbar" style="width: 100%"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Notification Modal -->
+    <div class="notification-modal" id="notificationModal">
+        <div class="notification-modal-content">
+            <div class="d-flex justify-content-between align-items-center p-3 border-bottom">
+                <h5 class="mb-0"><i class="fas fa-bell me-2"></i>Notifications</h5>
+                <button class="btn btn-sm btn-link text-decoration-none" onclick="closeNotificationModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="notificationList" style="max-height: 300px; overflow-y: auto;">
+                <div class="text-center text-muted py-5">
+                    <i class="fas fa-bell-slash fa-2x mb-3"></i>
+                    <p>No notifications yet</p>
+                </div>
+            </div>
+            <div class="p-3 border-top">
+                <button class="btn btn-sm btn-outline-secondary w-100" onclick="markAllAsRead()">
+                    <i class="fas fa-check-double me-2"></i>Mark All as Read
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="main-container">
+        <!-- Header with Notification Bell -->
+        <div class="header">
+            <div class="notification-bell" onclick="openNotificationModal()">
+                <i class="fas fa-bell"></i>
+                <div class="notification-badge d-none" id="notificationBadge">0</div>
+            </div>
+            <h2><i class="fas fa-rocket me-2"></i>Ads-Revenue</h2>
+            <p class="mb-0">Earn ACR Coins • Live Ads</p>
+        </div>
+        
+        <!-- Balance Display -->
+        <div class="balance-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="mb-1">Your Balance</h5>
+                    <h1 id="balance" class="mb-0">0 ACR</h1>
+                    <small id="userInfo">Connect to Telegram</small>
+                </div>
+                <div class="text-end">
+                    <button class="btn btn-light btn-sm" onclick="refreshBalance()">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Navigation Tabs -->
+        <ul class="nav nav-tabs nav-fill" id="mainTab" role="tablist">
+            <li class="nav-item">
+                <button class="nav-link active" id="user-tab" data-bs-toggle="tab" data-bs-target="#user" type="button">
+                    <i class="fas fa-user me-1"></i> Profile
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" id="tasks-tab" data-bs-toggle="tab" data-bs-target="#tasks" type="button">
+                    <i class="fas fa-tasks me-1"></i> Tasks
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" id="referral-tab" data-bs-toggle="tab" data-bs-target="#referral" type="button">
+                    <i class="fas fa-users me-1"></i> Referrals
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" id="withdraw-tab" data-bs-toggle="tab" data-bs-target="#withdraw" type="button">
+                    <i class="fas fa-wallet me-1"></i> Withdraw
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" id="ads-tab" data-bs-toggle="tab" data-bs-target="#ads" type="button">
+                    <i class="fas fa-ad me-1"></i> Ads
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" id="promo-tab" data-bs-toggle="tab" data-bs-target="#promo" type="button">
+                    <i class="fas fa-gift me-1"></i> Promo
+                </button>
+            </li>
+        </ul>
+        
+        <!-- Tab Content -->
+        <div class="tab-content" id="mainTabContent">
+            <!-- User Profile Tab -->
+            <div class="tab-pane fade show active" id="user">
+                <div class="feature-card card">
+                    <div class="card-body user-profile-card">
+                        <!-- Profile Header -->
+                        <div class="profile-header">
+                            <div class="profile-avatar" id="telegramAvatar">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <div class="profile-info">
+                                <h4 id="telegramName">Loading...</h4>
+                                <p id="telegramUsername">@username</p>
+                                <p class="text-muted mb-0">
+                                    <small>Telegram ID: <span id="telegramId">---</span></small>
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <!-- Statistics -->
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <div class="stat-value" id="profileBalance">0</div>
+                                <div class="stat-label">ACR Balance</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value" id="profileTotalAds">0</div>
+                                <div class="stat-label">Total Ads</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value" id="profileReferrals">0</div>
+                                <div class="stat-label">Referrals</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value" id="profileTotalEarned">0</div>
+                                <div class="stat-label">Total Earned</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value" id="profileTotalWithdrawn">0</div>
+                                <div class="stat-label">Total Withdrawn</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value" id="profileDays">1</div>
+                                <div class="stat-label">Days Active</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Telegram Profile Details -->
+                        <div class="mt-4 p-3 border rounded">
+                            <h6><i class="fab fa-telegram me-2"></i>Telegram Profile Details</h6>
+                            <div class="info-row">
+                                <span class="info-label">Full Name</span>
+                                <span class="info-value" id="tgFullName">Loading...</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Username</span>
+                                <span class="info-value" id="tgUsername">@username</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">User ID</span>
+                                <span class="info-value" id="tgUserId">---</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Language</span>
+                                <span class="info-value" id="tgLanguage">en</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Premium User</span>
+                                <span class="info-value" id="tgPremium">No</span>
+                            </div>
+                            <div class="alert alert-success mt-2 mb-0">
+                                <i class="fas fa-check-circle me-2"></i>
+                                Authenticated via Telegram • Secure Connection
+                            </div>
+                        </div>
+                        
+                        <!-- Account Details -->
+                        <div class="mt-4 p-3 border rounded">
+                            <h6><i class="fas fa-info-circle me-2"></i>Account Details</h6>
+                            <div class="info-row">
+                                <span class="info-label">Joined Date</span>
+                                <span class="info-value" id="joinDate">Today</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Last Active</span>
+                                <span class="info-value" id="lastActive">Now</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Total Earned</span>
+                                <span class="info-value text-success" id="totalEarnedAll">0 ACR</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Total Withdrawn</span>
+                                <span class="info-value text-warning" id="totalWithdrawnAll">0 ACR</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Support Section -->
+                        <div class="mt-4">
+                            <h6><i class="fas fa-headset me-2"></i>Support & Community</h6>
+                            
+                            <a href="https://t.me/AdsRevenueSupport" target="_blank" class="support-link">
+                                <div class="support-icon">
+                                    <i class="fas fa-headset"></i>
+                                </div>
+                                <div>
+                                    <div class="fw-bold">Support Chat</div>
+                                    <small class="text-muted">Get help from admin</small>
+                                </div>
+                            </a>
+                            
+                            <a href="https://t.me/AdsRevenueChannel" target="_blank" class="support-link">
+                                <div class="support-icon">
+                                    <i class="fas fa-bullhorn"></i>
+                                </div>
+                                <div>
+                                    <div class="fw-bold">Official Channel</div>
+                                    <small class="text-muted">Announcements & updates</small>
+                                </div>
+                            </a>
+                            
+                            <a href="https://t.me/AdsRevenueCommunity" target="_blank" class="support-link">
+                                <div class="support-icon">
+                                    <i class="fas fa-users"></i>
+                                </div>
+                                <div>
+                                    <div class="fw-bold">Community Group</div>
+                                    <small class="text-muted">Chat with other users</small>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Tasks Tab -->
+            <div class="tab-pane fade" id="tasks">
+                <div class="feature-card card">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="fas fa-tasks text-primary me-2"></i>Complete Tasks & Earn ACR</h5>
+                        <p class="text-muted">Complete simple tasks to earn extra ACR coins</p>
+                        
+                        <!-- Task 1: Join Channel -->
+                        <div class="task-item">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div>
+                                    <i class="fas fa-bullhorn text-primary me-2"></i>
+                                    <strong>Join Our Telegram Channel</strong>
+                                    <span class="task-reward">+50 ACR</span>
+                                </div>
+                                <button class="btn btn-sm btn-primary" onclick="completeTask('join_channel')" id="taskChannelBtn">
+                                    <i class="fab fa-telegram me-1"></i> Join & Verify
+                                </button>
+                            </div>
+                            <small class="text-muted">Join our official channel for updates</small>
+                        </div>
+                        
+                        <!-- Task 2: Join Group -->
+                        <div class="task-item">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div>
+                                    <i class="fas fa-users text-success me-2"></i>
+                                    <strong>Join Community Group</strong>
+                                    <span class="task-reward">+30 ACR</span>
+                                </div>
+                                <button class="btn btn-sm btn-success" onclick="completeTask('join_group')" id="taskGroupBtn">
+                                    <i class="fab fa-telegram me-1"></i> Join & Verify
+                                </button>
+                            </div>
+                            <small class="text-muted">Join our community group</small>
+                        </div>
+                        
+                        <!-- Task 3: Follow on Twitter -->
+                        <div class="task-item">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div>
+                                    <i class="fab fa-twitter text-info me-2"></i>
+                                    <strong>Follow on Twitter</strong>
+                                    <span class="task-reward">+25 ACR</span>
+                                </div>
+                                <button class="btn btn-sm btn-info" onclick="completeTask('follow_twitter')" id="taskTwitterBtn">
+                                    <i class="fab fa-twitter me-1"></i> Follow & Verify
+                                </button>
+                            </div>
+                            <small class="text-muted">Follow our official Twitter account</small>
+                        </div>
+                        
+                        <!-- Task 4: Visit Website -->
+                        <div class="task-item">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div>
+                                    <i class="fas fa-globe text-warning me-2"></i>
+                                    <strong>Visit Our Website</strong>
+                                    <span class="task-reward">+20 ACR</span>
+                                </div>
+                                <button class="btn btn-sm btn-warning" onclick="completeTask('visit_website')" id="taskWebsiteBtn">
+                                    <i class="fas fa-external-link-alt me-1"></i> Visit & Verify
+                                </button>
+                            </div>
+                            <small class="text-muted">Visit our website for 30 seconds</small>
+                        </div>
+                        
+                        <!-- Task 5: Invite Friends -->
+                        <div class="task-item">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div>
+                                    <i class="fas fa-user-plus text-danger me-2"></i>
+                                    <strong>Invite 5 Friends</strong>
+                                    <span class="task-reward">+100 ACR</span>
+                                </div>
+                                <button class="btn btn-sm btn-danger" onclick="completeTask('invite_friends')" id="taskInviteBtn">
+                                    <i class="fas fa-users me-1"></i> Invite Now
+                                </button>
+                            </div>
+                            <small class="text-muted">Invite 5 friends to join Ads-Revenue</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Tasks History -->
+                <div class="feature-card card">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="fas fa-history me-2"></i>Completed Tasks</h5>
+                        <div id="tasksHistoryList" class="list-group list-group-flush">
+                            <div class="list-group-item text-center text-muted py-4">
+                                No tasks completed yet
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Referral Tab -->
+            <div class="tab-pane fade" id="referral">
+                <div class="feature-card card">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="fas fa-user-plus text-success me-2"></i>Invite & Earn Commission</h5>
+                        <p class="text-muted">Invite friends and earn <strong id="referralCommission">5%</strong> of their earnings forever!</p>
+                        
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <div class="stat-value" id="totalReferrals">0</div>
+                                <div class="stat-label">Total Referrals</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value" id="refEarnings">0</div>
+                                <div class="stat-label">ACR Earned</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value" id="activeRefs">0</div>
+                                <div class="stat-label">Active Today</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value" id="refAds">0</div>
+                                <div class="stat-label">Total Ads</div>
+                            </div>
+                        </div>
+                        
+                        <h6 class="mt-4">Your Referral Link</h6>
+                        <div class="input-group mt-2">
+                            <input type="text" class="form-control" id="referralLink" readonly>
+                            <button class="btn btn-success" onclick="copyReferralLink()">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                        
+                        <button class="btn btn-success w-100 mt-3" onclick="shareReferralLink()">
+                            <i class="fas fa-share-alt me-2"></i>Share Invitation Link
+                        </button>
+                        
+                        <div class="alert alert-info mt-3">
+                            <i class="fas fa-lightbulb me-2"></i>
+                            Invite your friends and earn ACR coins together! Start building your network now 🚀
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Referral History -->
+                <div class="feature-card card">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="fas fa-list me-2"></i>Recent Referral Earnings</h5>
+                        <div id="referralHistoryList" class="list-group list-group-flush">
+                            <div class="list-group-item text-center text-muted py-4">
+                                No referral earnings yet
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Withdraw Tab -->
+            <div class="tab-pane fade" id="withdraw">
+                <div class="feature-card card">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="fas fa-money-bill-wave text-warning me-2"></i>Withdraw ACR Coins</h5>
+                        
+                        <!-- Announcement -->
+                        <div class="alert alert-info">
+                            <i class="fas fa-bullhorn me-2"></i>
+                            <span id="withdrawAnnouncement">Withdraw your ACR coins to FaucetPay email. Requirements: 5 referrals & minimum 2500 ACR</span>
+                        </div>
+                        
+                        <!-- Referral Requirement Warning -->
+                        <div class="alert alert-warning" id="referralRequirementAlert">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            You need <strong id="requiredReferrals">5</strong> referrals to withdraw. You have <strong id="currentReferrals">0</strong> referrals.
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">FaucetPay Email</label>
+                            <input type="email" class="form-control" id="faucetPayEmail" placeholder="your@email.com">
+                        </div>
+                        
+                        <!-- Input box -->
+                        <div class="mb-4">
+                            <label class="form-label">Amount to Withdraw (ACR)</label>
+                            <div class="withdrawal-input-group">
+                                <input type="number" 
+                                       class="withdrawal-input" 
+                                       id="withdrawAmount"
+                                       placeholder="Enter amount"
+                                       min="2500"
+                                       step="10"
+                                       oninput="calculateWithdrawal()">
+                            </div>
+                            <div class="text-end mt-2">
+                                <small class="text-muted">Min: <span id="minAmount">2500</span> ACR • Max: <span id="maxAmount">3000</span> ACR</small>
+                            </div>
+                        </div>
+                        
+                        <!-- Calculation -->
+                        <div class="withdrawal-calc" id="withdrawalCalc">
+                            <div class="withdrawal-calc-row">
+                                <span>Amount to withdraw:</span>
+                                <span id="calcAmount">0 ACR</span>
+                            </div>
+                            <div class="withdrawal-calc-row">
+                                <span>Transaction Fee (<span id="feePercentage">5</span>%):</span>
+                                <span class="text-danger" id="calcFee">-0 ACR</span>
+                            </div>
+                            <div class="withdrawal-calc-row total">
+                                <span>You will receive:</span>
+                                <span class="text-success" id="calcFinal">0 ACR</span>
+                            </div>
+                            <div class="mt-2 text-center">
+                                <small class="text-muted">Approx. TON: <span class="fw-bold" id="calcTon">~0 TON</span></small>
+                                <br>
+                                <small class="text-muted">Exchange rate: <span id="tonRate">1 ACR = 0.000001 TON</span></small>
+                            </div>
+                        </div>
+                        
+                        <button class="btn btn-warning w-100 mt-3" id="withdrawBtn" onclick="requestWithdrawal()" disabled>
+                            <i class="fas fa-paper-plane me-2"></i>Request Withdrawal
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Withdrawal History -->
+                <div class="feature-card card">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="fas fa-history me-2"></i>Withdrawal History</h5>
+                        <div class="list-group list-group-flush" id="withdrawalHistoryList">
+                            <div class="list-group-item text-center text-muted py-4">
+                                No withdrawals yet
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Ads Tab -->
+            <div class="tab-pane fade" id="ads">
+                <div class="feature-card card">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="fas fa-play-circle text-primary me-2"></i>Watch Ads & Earn ACR Coins</h5>
+                        <p class="text-muted mb-4">Complete ads to earn coins. Each ad network has daily limits.</p>
+                        
+                        <!-- Global Cooldown Warning -->
+                        <div class="alert alert-warning d-none" id="globalCooldownAlert">
+                            <i class="fas fa-clock me-2"></i>
+                            <span id="cooldownMessage">Ads are on cooldown. Please wait...</span>
+                        </div>
+                        
+                        <!-- Ad Item 1: Adexora (2 ACR reward) -->
+                        <div class="ad-item adexora">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div>
+                                    <h6 class="mb-1">
+                                        <i class="fas fa-tv text-primary me-2"></i>Adexora Ads
+                                        <span class="ads-counter" id="adexoraCounter">0/<span id="adexoraLimit">20</span></span>
+                                    </h6>
+                                    <p class="mb-1 text-success">
+                                        <i class="fas fa-coins me-1"></i>Reward: <strong id="adexoraReward">2</strong> ACR per ad
+                                    </p>
+                                </div>
+                                <div>
+                                    <span class="badge bg-primary">Easy</span>
+                                </div>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar bg-primary" role="progressbar" style="width: 0%"></div>
+                            </div>
+                            <div class="ads-info">
+                                <i class="fas fa-info-circle me-1"></i>
+                                <span id="adexoraTime">25</span> sec watch time • <span id="adexoraCooldown">15</span> sec cooldown
+                            </div>
+                            <button class="btn btn-primary w-100 mt-3" id="watchAdexoraBtn" onclick="watchAdexoraAd()">
+                                <i class="fas fa-play me-2"></i>Watch Ad
+                            </button>
+                        </div>
+                        
+                        <!-- Ad Item 2: Onclika (3 ACR reward) -->
+                        <div class="ad-item onclika">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div>
+                                    <h6 class="mb-1">
+                                        <i class="fas fa-play text-warning me-2"></i>Onclika Ads
+                                        <span class="ads-counter" id="onclikaCounter">0/<span id="onclikaLimit">45</span></span>
+                                    </h6>
+                                    <p class="mb-1 text-success">
+                                        <i class="fas fa-coins me-1"></i>Reward: <strong id="onclikaReward">3</strong> ACR per ad
+                                    </p>
+                                </div>
+                                <div>
+                                    <span class="badge bg-warning">Medium</span>
+                                </div>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar bg-warning" role="progressbar" style="width: 0%"></div>
+                            </div>
+                            <div class="ads-info">
+                                <i class="fas fa-info-circle me-1"></i>
+                                <span id="onclikaTime">30</span> sec watch time • <span id="onclikaCooldown">8</span> sec cooldown
+                            </div>
+                            <button class="btn btn-warning w-100 mt-3" id="watchOnclikaBtn" onclick="watchOnclikaAd()">
+                                <i class="fas fa-play me-2"></i>Watch Ad
+                            </button>
+                        </div>
+                        
+                        <!-- Ad Item 3: Adexium (5 ACR reward for 2 ads) -->
+                        <div class="ad-item adexium">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div>
+                                    <h6 class="mb-1">
+                                        <i class="fas fa-video text-danger me-2"></i>Adexium Ads (2 Ads)
+                                        <span class="ads-counter" id="adexiumCounter">0/<span id="adexiumLimit">45</span></span>
+                                    </h6>
+                                    <p class="mb-1 text-success">
+                                        <i class="fas fa-coins me-1"></i>Reward: <strong id="adexiumReward">5</strong> ACR for 2 ads
+                                    </p>
+                                </div>
+                                <div>
+                                    <span class="badge bg-danger">High Reward</span>
+                                </div>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar bg-danger" role="progressbar" style="width: 0%"></div>
+                            </div>
+                            <div class="ads-info">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Watch 2 ads • <span id="adexiumCooldown">10</span> sec cooldown
+                            </div>
+                            <button class="btn btn-danger w-100 mt-3" id="watchAdexiumBtn" onclick="watchAdexiumAds()">
+                                <i class="fas fa-play me-2"></i>Watch 2 Ads
+                            </button>
+                        </div>
+                        
+                        <!-- Ad Stats Summary -->
+                        <div class="mt-4 p-3 border rounded">
+                            <div class="row text-center">
+                                <div class="col-4">
+                                    <div class="text-primary">
+                                        <h5 class="mb-1" id="totalAdsToday">0</h5>
+                                        <small>Today's Ads</small>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="text-success">
+                                        <h5 class="mb-1" id="totalEarnedToday">0</h5>
+                                        <small>ACR Earned</small>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="text-info">
+                                        <h5 class="mb-1" id="remainingAds">110</h5>
+                                        <small>Ads Remaining</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Ads History -->
+                <div class="feature-card card">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="fas fa-history me-2"></i>Recent Ads Activity</h5>
+                        <div id="adsHistoryList" class="list-group list-group-flush">
+                            <div class="list-group-item text-center text-muted py-4">
+                                No ads watched yet
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Promo Codes Tab -->
+            <div class="tab-pane fade" id="promo">
+                <div class="feature-card card">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="fas fa-gift text-danger me-2"></i>Redeem Promo Code</h5>
+                        <p class="text-muted">Get promo codes from our Telegram channel and redeem them here</p>
+                        
+                        <!-- Promo Channel Button -->
+                        <a href="https://t.me/AdsRevenueChannel" target="_blank" class="promo-channel-btn">
+                            <i class="fab fa-telegram"></i> Join Promo Code Channel
+                        </a>
+                        
+                        <div class="input-group mb-3 mt-4">
+                            <input type="text" class="form-control" id="promoCodeInput" placeholder="Paste promo code from channel">
+                            <button class="btn btn-accent" onclick="redeemPromoCode()">
+                                <i class="fas fa-check"></i> Redeem
+                            </button>
+                        </div>
+                        
+                        <div id="promoMessage" class="alert d-none"></div>
+                        
+                        <!-- How It Works -->
+                        <div class="mt-4 p-3 border rounded">
+                            <h6><i class="fas fa-info-circle me-2"></i>How to Get Promo Codes</h6>
+                            <ol class="mb-0">
+                                <li>Join our Telegram channel above</li>
+                                <li>Check for promo code posts</li>
+                                <li>Copy the promo code</li>
+                                <li>Paste it here and redeem</li>
+                                <li>Watch an ad to claim your reward</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Promo History -->
+                <div class="feature-card card">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="fas fa-list me-2"></i>Promo Code History</h5>
+                        <div id="promoHistoryList" class="list-group list-group-flush">
+                            <div class="list-group-item text-center text-muted py-4">
+                                No promo codes redeemed yet
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="text-center py-3 border-top">
+            <small class="text-muted">
+                Ads-Revenue TMA • Telegram Mini App
+            </small>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Telegram Web App
+        let tg = null;
+        let tgUser = null;
+        let onclikaShowAd = null;
+        let adCooldown = false;
+        let notifications = [];
+        let adexiumWidget = null;
+        
+        // Firebase
+        let firebaseApp, db, auth;
+        let currentUserData = null;
+        let firebaseUserId = null;
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            initFirebase();
+            initTelegram();
+            initializeAdSDKs();
+            loadNotifications();
+            initBootstrapTabs();
+            calculateWithdrawal();
+            checkWithdrawalRequirement();
+        });
+        
+        // Initialize Firebase
+        function initFirebase() {
+            try {
+                // YOUR FIREBASE CONFIG - ALREADY INCLUDED
+                const firebaseConfig = {
+                    apiKey: "AIzaSyBh7skcRxAdjw6z9JA5OeKW0PXJd1UKumY",
+                    authDomain: "adsrevenuetma.firebaseapp.com",
+                    projectId: "adsrevenuetma",
+                    storageBucket: "adsrevenuetma.firebasestorage.app",
+                    messagingSenderId: "5961275180",
+                    appId: "1:5961275180:web:81d544b0e63d455272be89"
+                };
+                
+                // Initialize Firebase
+                if (!firebase.apps.length) {
+                    firebaseApp = firebase.initializeApp(firebaseConfig);
+                    db = firebase.firestore();
+                    auth = firebase.auth();
+                    console.log("Firebase initialized successfully");
+                } else {
+                    firebaseApp = firebase.app();
+                    db = firebase.firestore();
+                    auth = firebase.auth();
+                }
+                
+            } catch (error) {
+                console.error("Firebase initialization error:", error);
+            }
+        }
+        
+        // Authenticate Telegram user with Firebase
+        async function authenticateTelegramUser(telegramUser) {
+            try {
+                if (!telegramUser || !telegramUser.id) {
+                    console.error("No Telegram user data");
+                    return null;
+                }
+                
+                // Sign in anonymously
+                const userCredential = await auth.signInAnonymously();
+                firebaseUserId = userCredential.user.uid;
+                const telegramId = telegramUser.id.toString();
+                
+                console.log("Telegram user authenticated:", telegramId);
+                
+                // Check if user exists in Firestore
+                const userRef = db.collection('users').doc(firebaseUserId);
+                const userDoc = await userRef.get();
+                
+                if (!userDoc.exists) {
+                    // Create new user
+                    await userRef.set({
+                        telegramId: telegramId,
+                        username: telegramUser.username || 'unknown',
+                        firstName: telegramUser.first_name || '',
+                        lastName: telegramUser.last_name || '',
+                        balance: 0,
+                        totalEarned: 0,
+                        totalWithdrawn: 0,
+                        totalAds: 0,
+                        referrals: [],
+                        referralCount: 0,
+                        referralEarnings: 0,
+                        joinedAt: new Date().toISOString(),
+                        lastActive: new Date().toISOString(),
+                        isBanned: false
+                    });
+                    
+                    console.log("New user created in Firestore");
+                    
+                    addNotification({
+                        type: 'success',
+                        title: 'Welcome!',
+                        message: 'Your account has been created successfully',
+                        time: new Date().toISOString()
+                    });
+                    
+                } else {
+                    // Update last active
+                    await userRef.update({
+                        lastActive: new Date().toISOString()
+                    });
+                    
+                    console.log("Existing user updated");
+                }
+                
+                // Load user data
+                await loadUserDataFromFirestore();
+                
+                return firebaseUserId;
+                
+            } catch (error) {
+                console.error("Telegram authentication error:", error);
+                return null;
+            }
+        }
+        
+        // Load user data from Firestore
+        async function loadUserDataFromFirestore() {
+            try {
+                if (!firebaseUserId) {
+                    console.error("No Firebase user ID");
+                    return;
+                }
+                
+                const userDoc = await db.collection('users').doc(firebaseUserId).get();
+                
+                if (userDoc.exists) {
+                    currentUserData = userDoc.data();
+                    
+                    // Update UI with Firestore data
+                    document.getElementById('balance').textContent = 
+                        (currentUserData.balance || 0).toLocaleString() + ' ACR';
+                    
+                    document.getElementById('profileBalance').textContent = 
+                        (currentUserData.balance || 0).toLocaleString();
+                    
+                    document.getElementById('profileTotalEarned').textContent = 
+                        (currentUserData.totalEarned || 0).toLocaleString();
+                    
+                    document.getElementById('profileTotalWithdrawn').textContent = 
+                        (currentUserData.totalWithdrawn || 0).toLocaleString();
+                    
+                    document.getElementById('profileTotalAds').textContent = 
+                        (currentUserData.totalAds || 0).toLocaleString();
+                    
+                    document.getElementById('totalEarnedAll').textContent = 
+                        (currentUserData.totalEarned || 0).toLocaleString() + ' ACR';
+                    
+                    document.getElementById('totalWithdrawnAll').textContent = 
+                        (currentUserData.totalWithdrawn || 0).toLocaleString() + ' ACR';
+                    
+                    console.log("User data loaded from Firestore:", currentUserData);
+                }
+                
+            } catch (error) {
+                console.error("Load user data error:", error);
+            }
+        }
+        
+        // Update user balance in Firestore
+        async function updateUserBalance(amount, reason = 'ad_watch') {
+            try {
+                if (!firebaseUserId) {
+                    console.error("No Firebase user ID");
+                    return null;
+                }
+                
+                const userRef = db.collection('users').doc(firebaseUserId);
+                
+                // Update in Firestore
+                await userRef.update({
+                    balance: firebase.firestore.FieldValue.increment(amount),
+                    totalEarned: firebase.firestore.FieldValue.increment(amount > 0 ? amount : 0),
+                    totalAds: firebase.firestore.FieldValue.increment(1),
+                    lastActive: new Date().toISOString()
+                });
+                
+                // Update local data
+                if (currentUserData) {
+                    currentUserData.balance = (currentUserData.balance || 0) + amount;
+                    currentUserData.totalEarned = (currentUserData.totalEarned || 0) + (amount > 0 ? amount : 0);
+                    currentUserData.totalAds = (currentUserData.totalAds || 0) + 1;
+                }
+                
+                // Update UI
+                document.getElementById('balance').textContent = 
+                    (currentUserData?.balance || 0).toLocaleString() + ' ACR';
+                
+                document.getElementById('profileBalance').textContent = 
+                    (currentUserData?.balance || 0).toLocaleString();
+                
+                document.getElementById('profileTotalEarned').textContent = 
+                    (currentUserData?.totalEarned || 0).toLocaleString();
+                
+                document.getElementById('profileTotalAds').textContent = 
+                    (currentUserData?.totalAds || 0).toLocaleString();
+                
+                console.log(`Balance updated: +${amount} ACR (${reason})`);
+                
+                return currentUserData?.balance || 0;
+                
+            } catch (error) {
+                console.error("Update balance error:", error);
+                return null;
+            }
+        }
+        
+        // Get app settings from Firestore
+        async function getAppSettings() {
+            try {
+                const settings = {};
+                
+                // Get all settings documents
+                const settingsSnapshot = await db.collection('settings').get();
+                
+                settingsSnapshot.forEach(doc => {
+                    settings[doc.id] = doc.data();
+                });
+                
+                return settings;
+                
+            } catch (error) {
+                console.error("Get settings error:", error);
+                return null;
+            }
+        }
+        
+        // Initialize Telegram Web App
+        function initTelegram() {
+            try {
+                tg = window.Telegram.WebApp;
+                if (tg) {
+                    tg.ready();
+                    tg.expand();
+                    
+                    tgUser = tg.initDataUnsafe?.user;
+                    
+                    if (tgUser) {
+                        // Authenticate with Firebase
+                        authenticateTelegramUser(tgUser);
+                        
+                        updateTelegramProfile();
+                        setupReferralSystem();
+                    } else {
+                        updateTelegramProfileWithDefaults();
+                    }
+                    
+                } else {
+                    console.log('Telegram Web App SDK not loaded');
+                    updateTelegramProfileWithDefaults();
+                }
+            } catch (error) {
+                console.error('Telegram initialization error:', error);
+                updateTelegramProfileWithDefaults();
+            }
+        }
+        
+        // Initialize all Ad SDKs
+        function initializeAdSDKs() {
+            console.log('Initializing ad SDKs...');
+            
+            // Initialize Onclika
+            if (window.initCdTma) {
+                window.initCdTma({ id: '6105046' })
+                    .then(show => {
+                        onclikaShowAd = show;
+                        console.log('✅ Onclika SDK initialized');
+                        document.getElementById('watchOnclikaBtn').disabled = false;
+                    })
+                    .catch(error => {
+                        console.error('Onclika init failed:', error);
+                        document.getElementById('watchOnclikaBtn').disabled = true;
+                        document.getElementById('watchOnclikaBtn').innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i>Not Available';
+                    });
+            } else {
+                console.log('❌ Onclika SDK not loaded');
+                document.getElementById('watchOnclikaBtn').disabled = true;
+                document.getElementById('watchOnclikaBtn').innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i>Not Available';
+            }
+            
+            // Initialize Adexium
+            if (typeof AdexiumWidget !== 'undefined') {
+                adexiumWidget = new AdexiumWidget({
+                    wid: 'fbf9d4a6-5cb4-4514-863c-de26cd1f4670',
+                    adFormat: 'interstitial',
+                    debug: true
+                });
+                console.log('✅ Adexium SDK initialized');
+                document.getElementById('watchAdexiumBtn').disabled = false;
+            } else {
+                console.log('❌ Adexium SDK not loaded');
+                document.getElementById('watchAdexiumBtn').disabled = true;
+                document.getElementById('watchAdexiumBtn').innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i>Not Available';
+            }
+            
+            // Check Adexora
+            setTimeout(() => {
+                if (typeof window.showAdexora === 'function') {
+                    console.log('✅ Adexora SDK loaded');
+                    document.getElementById('watchAdexoraBtn').disabled = false;
+                } else {
+                    console.log('❌ Adexora SDK not loaded');
+                    document.getElementById('watchAdexoraBtn').disabled = true;
+                    document.getElementById('watchAdexoraBtn').innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i>Not Available';
+                }
+            }, 1000);
+        }
+        
+        // Watch Adexora Ad
+        async function watchAdexoraAd() {
+            if (adCooldown) {
+                showNotification('Please wait', 'Ads are on cooldown', 'warning');
+                return;
+            }
+            
+            try {
+                // 1. Disable buttons and show loading
+                disableAdButtons();
+                showLoadingOverlay('Loading Adexora Ad...', 'Please wait...');
+                
+                // 2. Show ad
+                if (typeof window.showAdexora !== 'function') {
+                    throw new Error('Adexora not available');
+                }
+                
+                await window.showAdexora();
+                
+                // 3. Get reward amount from Firestore settings
+                const settings = await getAppSettings();
+                const reward = settings?.ad_settings?.adexora_reward || 2;
+                
+                // 4. Update balance in Firestore
+                const newBalance = await updateUserBalance(reward, 'adexora_ad');
+                
+                if (newBalance !== null) {
+                    // 5. Show success
+                    hideLoadingOverlay();
+                    enableAdButtons();
+                    startCooldown(15);
+                    
+                    showNotification('Success!', `You earned ${reward} ACR from Adexora ad 🎉`, 'success');
+                    
+                    // 6. Update ad history
+                    addToAdsHistory('Adexora Ad', reward);
+                    
+                } else {
+                    throw new Error('Failed to update balance');
+                }
+                
+            } catch (error) {
+                hideLoadingOverlay();
+                enableAdButtons();
+                console.error('Ad error:', error);
+                
+                if (error === 'no_ad') {
+                    showNotification('No Ads', 'No Adexora ads available', 'warning');
+                } else {
+                    showNotification('Ad Error', error.message || 'Failed to play ad', 'error');
+                }
+            }
+        }
+        
+        // Watch Onclika Ad
+        async function watchOnclikaAd() {
+            if (adCooldown) {
+                showNotification('Please wait', 'Ads are on cooldown', 'warning');
+                return;
+            }
+            
+            try {
+                disableAdButtons();
+                showLoadingOverlay('Loading Onclika Ad...', 'Please wait...');
+                
+                if (!onclikaShowAd || typeof onclikaShowAd !== 'function') {
+                    throw new Error('Onclika not available');
+                }
+                
+                await onclikaShowAd();
+                
+                const settings = await getAppSettings();
+                const reward = settings?.ad_settings?.onclika_reward || 3;
+                
+                const newBalance = await updateUserBalance(reward, 'onclika_ad');
+                
+                if (newBalance !== null) {
+                    hideLoadingOverlay();
+                    enableAdButtons();
+                    startCooldown(8);
+                    
+                    showNotification('Success!', `You earned ${reward} ACR from Onclika ad 🎉`, 'success');
+                    
+                    addToAdsHistory('Onclika Ad', reward);
+                    
+                } else {
+                    throw new Error('Failed to update balance');
+                }
+                
+            } catch (error) {
+                hideLoadingOverlay();
+                enableAdButtons();
+                console.error('Onclika ad error:', error);
+                showNotification('Ad Error', error.message || 'Failed to play ad', 'error');
+            }
+        }
+        
+        // Watch Adexium Ads (2 ads)
+        async function watchAdexiumAds() {
+            if (adCooldown) {
+                showNotification('Please wait', 'Ads are on cooldown', 'warning');
+                return;
+            }
+            
+            try {
+                disableAdButtons();
+                showLoadingOverlay('Loading Adexium Ads...', 'Please watch 2 ads...');
+                
+                if (!adexiumWidget) {
+                    throw new Error('Adexium not available');
+                }
+                
+                let adsCompleted = 0;
+                let hasError = false;
+                
+                // Setup event handlers
+                adexiumWidget.on('adReceived', (ad) => {
+                    console.log('Ad received, displaying...');
+                    adexiumWidget.displayAd(ad);
+                });
+                
+                adexiumWidget.on('noAdFound', () => {
+                    console.log('No Adexium ads found');
+                    hasError = true;
+                    hideLoadingOverlay();
+                    enableAdButtons();
+                    showNotification('No Ads', 'No Adexium ads available', 'warning');
+                });
+                
+                adexiumWidget.on('adPlaybackCompleted', () => {
+                    console.log('Ad playback completed');
+                    adsCompleted++;
+                    
+                    if (adsCompleted >= 2) {
+                        // Both ads completed
+                        getAppSettings().then(settings => {
+                            const reward = settings?.ad_settings?.adexium_reward || 5;
+                            
+                            updateUserBalance(reward, 'adexium_ads').then(newBalance => {
+                                if (newBalance !== null) {
+                                    hideLoadingOverlay();
+                                    enableAdButtons();
+                                    startCooldown(10);
+                                    
+                                    showNotification('Success!', `You earned ${reward} ACR from 2 Adexium ads 🎉`, 'success');
+                                    
+                                    addToAdsHistory('Adexium Ads (2 ads)', reward);
+                                }
+                            });
+                        });
+                    } else {
+                        // Show next ad
+                        setTimeout(() => {
+                            adexiumWidget.requestAd('interstitial');
+                        }, 1000);
+                    }
+                });
+                
+                adexiumWidget.on('adClosed', () => {
+                    console.log('Ad closed by user');
+                    if (adsCompleted < 2 && !hasError) {
+                        hideLoadingOverlay();
+                        enableAdButtons();
+                        showNotification('Ad Closed', 'You closed the ad early', 'warning');
+                    }
+                });
+                
+                // Request first ad
+                adexiumWidget.requestAd('interstitial');
+                
+            } catch (error) {
+                hideLoadingOverlay();
+                enableAdButtons();
+                console.error('Adexium ad error:', error);
+                showNotification('Ad Error', error.message || 'Failed to play ad', 'error');
+            }
+        }
+        
+        // Disable Ad Buttons
+        function disableAdButtons() {
+            document.getElementById('watchAdexoraBtn').disabled = true;
+            document.getElementById('watchOnclikaBtn').disabled = true;
+            document.getElementById('watchAdexiumBtn').disabled = true;
+            
+            document.getElementById('watchAdexoraBtn').innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Loading...';
+            document.getElementById('watchOnclikaBtn').innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Loading...';
+            document.getElementById('watchAdexiumBtn').innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Loading...';
+        }
+        
+        // Enable Ad Buttons
+        function enableAdButtons() {
+            document.getElementById('watchAdexoraBtn').disabled = false;
+            document.getElementById('watchOnclikaBtn').disabled = false;
+            document.getElementById('watchAdexiumBtn').disabled = false;
+            
+            document.getElementById('watchAdexoraBtn').innerHTML = '<i class="fas fa-play me-2"></i>Watch Ad';
+            document.getElementById('watchOnclikaBtn').innerHTML = '<i class="fas fa-play me-2"></i>Watch Ad';
+            document.getElementById('watchAdexiumBtn').innerHTML = '<i class="fas fa-play me-2"></i>Watch 2 Ads';
+        }
+        
+        // Start Cooldown
+        function startCooldown(seconds) {
+            adCooldown = true;
+            let remaining = seconds;
+            const globalCooldownAlert = document.getElementById('globalCooldownAlert');
+            const cooldownMessage = document.getElementById('cooldownMessage');
+            
+            globalCooldownAlert.classList.remove('d-none');
+            
+            const timerInterval = setInterval(() => {
+                cooldownMessage.textContent = `Ads are on cooldown. Please wait ${remaining} seconds...`;
+                remaining--;
+                
+                if (remaining < 0) {
+                    clearInterval(timerInterval);
+                    globalCooldownAlert.classList.add('d-none');
+                    adCooldown = false;
+                }
+            }, 1000);
+        }
+        
+        // Update Telegram Profile
+        function updateTelegramProfile() {
+            if (!tgUser) return;
+            
+            document.getElementById('telegramName').textContent = 
+                `${tgUser.first_name || ''} ${tgUser.last_name || ''}`.trim() || 'Anonymous';
+            document.getElementById('telegramUsername').textContent = 
+                tgUser.username ? '@' + tgUser.username : 'No username';
+            document.getElementById('telegramId').textContent = tgUser.id;
+            
+            document.getElementById('tgFullName').textContent = 
+                `${tgUser.first_name || ''} ${tgUser.last_name || ''}`.trim() || 'Anonymous';
+            document.getElementById('tgUsername').textContent = 
+                tgUser.username ? '@' + tgUser.username : 'No username';
+            document.getElementById('tgUserId').textContent = tgUser.id;
+            document.getElementById('tgLanguage').textContent = tgUser.language_code || 'en';
+            document.getElementById('tgPremium').textContent = tgUser.is_premium ? 'Yes' : 'No';
+            
+            const avatar = document.getElementById('telegramAvatar');
+            if (tgUser.photo_url) {
+                avatar.innerHTML = `<img src="${tgUser.photo_url}" alt="Profile Photo">`;
+            } else {
+                const initials = (tgUser.first_name?.[0] || '') + (tgUser.last_name?.[0] || '');
+                avatar.innerHTML = `<div style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; font-size: 24px; font-weight: bold;">${initials || '👤'}</div>`;
+            }
+            
+            document.getElementById('userInfo').textContent = 
+                `${tgUser.username ? '@' + tgUser.username : 'User'}`;
+        }
+        
+        function updateTelegramProfileWithDefaults() {
+            document.getElementById('telegramName').textContent = 'Telegram User';
+            document.getElementById('telegramUsername').textContent = '@telegramuser';
+            document.getElementById('telegramId').textContent = '123456789';
+            
+            document.getElementById('tgFullName').textContent = 'Telegram User';
+            document.getElementById('tgUsername').textContent = '@telegramuser';
+            document.getElementById('tgUserId').textContent = '123456789';
+            document.getElementById('tgLanguage').textContent = 'en';
+            document.getElementById('tgPremium').textContent = 'No';
+            
+            document.getElementById('userInfo').textContent = 'Connect to Telegram';
+        }
+        
+        // Setup Referral System
+        function setupReferralSystem() {
+            if (!tgUser) return;
+            
+            const myRef = tgUser.id;
+            const refLink = `https://t.me/CryptoHunttBot?startapp=${myRef}`;
+            document.getElementById('referralLink').value = refLink;
+        }
+        
+        // Add to Ads History
+        function addToAdsHistory(type, reward) {
+            // Store in localStorage for history display only
+            const history = JSON.parse(localStorage.getItem('adsHistory') || '[]');
+            
+            history.unshift({
+                type: type,
+                reward: reward,
+                time: new Date().toISOString(),
+                timestamp: Date.now()
+            });
+            
+            localStorage.setItem('adsHistory', JSON.stringify(history.slice(0, 10)));
+            
+            updateAdsHistoryList();
+        }
+        
+        // Update Ads History List
+        function updateAdsHistoryList() {
+            const historyList = document.getElementById('adsHistoryList');
+            const history = JSON.parse(localStorage.getItem('adsHistory') || '[]');
+            
+            if (history.length === 0) {
+                historyList.innerHTML = `
+                    <div class="list-group-item text-center text-muted py-4">
+                        No ads watched yet
+                    </div>
+                `;
+                return;
+            }
+            
+            historyList.innerHTML = history.map(item => {
+                const timeAgo = formatTimeAgo(item.time);
+                let iconClass = 'fas fa-play text-warning';
+                if (item.type.includes('Adexora')) iconClass = 'fas fa-tv text-primary';
+                if (item.type.includes('Adexium')) iconClass = 'fas fa-video text-danger';
+                
+                return `
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="${iconClass} me-2"></i>
+                            <span>${item.type}</span>
+                            <small class="text-muted ms-2">${timeAgo}</small>
+                        </div>
+                        <span class="text-success">+${item.reward} ACR</span>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        // Calculate Withdrawal
+        function calculateWithdrawal() {
+            const amountInput = document.getElementById('withdrawAmount');
+            const amount = parseFloat(amountInput.value) || 0;
+            const minAmount = 2500;
+            const maxAmount = 3000;
+            
+            if (amount < minAmount) {
+                amountInput.classList.add('is-invalid');
+                document.getElementById('withdrawalCalc').style.display = 'none';
+                document.getElementById('withdrawBtn').disabled = true;
+                return;
+            }
+            
+            if (amount > maxAmount) {
+                amountInput.value = maxAmount;
+                return calculateWithdrawal();
+            }
+            
+            amountInput.classList.remove('is-invalid');
+            document.getElementById('withdrawalCalc').style.display = 'block';
+            
+            const feePercentage = 5;
+            const processingFee = 1;
+            const tonRate = 0.000001;
+            
+            const transactionFee = (amount * feePercentage) / 100;
+            const totalFees = transactionFee + processingFee;
+            const finalAmount = amount - totalFees;
+            const tonEquivalent = finalAmount * tonRate;
+            
+            document.getElementById('calcAmount').textContent = amount.toFixed(2) + ' ACR';
+            document.getElementById('calcFee').textContent = '-' + transactionFee.toFixed(2) + ' ACR';
+            document.getElementById('calcFinal').textContent = finalAmount.toFixed(2) + ' ACR';
+            document.getElementById('calcTon').textContent = '~' + tonEquivalent.toFixed(6) + ' TON';
+            
+            if (!currentUserData) {
+                document.getElementById('withdrawBtn').disabled = true;
+                return;
+            }
+            
+            if (amount > (currentUserData.balance || 0)) {
+                document.getElementById('withdrawBtn').disabled = true;
+                showNotification('Insufficient balance', 'error');
+            } else {
+                checkWithdrawalRequirement();
+            }
+        }
+        
+        // Check withdrawal requirement
+        function checkWithdrawalRequirement() {
+            const totalReferrals = currentUserData?.referralCount || 0;
+            const requiredReferrals = 5;
+            
+            document.getElementById('currentReferrals').textContent = totalReferrals;
+            
+            if (totalReferrals >= requiredReferrals) {
+                document.getElementById('referralRequirementAlert').style.display = 'none';
+                document.getElementById('withdrawBtn').disabled = false;
+            } else {
+                document.getElementById('referralRequirementAlert').style.display = 'block';
+                document.getElementById('withdrawBtn').disabled = true;
+            }
+        }
+        
+        // Request Withdrawal
+        async function requestWithdrawal() {
+            const amount = parseFloat(document.getElementById('withdrawAmount').value);
+            const email = document.getElementById('faucetPayEmail').value;
+            
+            if (!email || !validateEmail(email)) {
+                showNotification('Please enter a valid email address', 'error');
+                return;
+            }
+            
+            if (amount < 2500) {
+                showNotification('Minimum withdrawal is 2500 ACR', 'error');
+                return;
+            }
+            
+            if (!currentUserData) {
+                showNotification('Please login first', 'error');
+                return;
+            }
+            
+            if (currentUserData.balance < amount) {
+                showNotification('Insufficient balance', 'error');
+                return;
+            }
+            
+            if ((currentUserData.referralCount || 0) < 5) {
+                showNotification('You need 5 referrals to withdraw', 'error');
+                return;
+            }
+            
+            try {
+                // Calculate fees
+                const feePercentage = 5;
+                const processingFee = 1;
+                const tonRate = 0.000001;
+                
+                const transactionFee = (amount * feePercentage) / 100;
+                const totalFees = transactionFee + processingFee;
+                const finalAmount = amount - totalFees;
+                const tonEquivalent = finalAmount * tonRate;
+                
+                // Create withdrawal in Firestore
+                const withdrawalRef = db.collection('withdrawals').doc();
+                const withdrawalData = {
+                    id: withdrawalRef.id,
+                    userId: firebaseUserId,
+                    telegramId: currentUserData.telegramId,
+                    amount: amount,
+                    netAmount: finalAmount,
+                    fees: totalFees,
+                    tonAmount: tonEquivalent,
+                    email: email,
+                    status: 'pending',
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                };
+                
+                await withdrawalRef.set(withdrawalData);
+                
+                // Update user balance in Firestore
+                const userRef = db.collection('users').doc(firebaseUserId);
+                await userRef.update({
+                    balance: firebase.firestore.FieldValue.increment(-amount),
+                    totalWithdrawn: firebase.firestore.FieldValue.increment(amount)
+                });
+                
+                // Update local data
+                currentUserData.balance -= amount;
+                currentUserData.totalWithdrawn = (currentUserData.totalWithdrawn || 0) + amount;
+                
+                // Update UI
+                document.getElementById('balance').textContent = 
+                    currentUserData.balance.toLocaleString() + ' ACR';
+                
+                document.getElementById('profileBalance').textContent = 
+                    currentUserData.balance.toLocaleString();
+                
+                document.getElementById('profileTotalWithdrawn').textContent = 
+                    currentUserData.totalWithdrawn.toLocaleString();
+                
+                document.getElementById('totalWithdrawnAll').textContent = 
+                    currentUserData.totalWithdrawn.toLocaleString() + ' ACR';
+                
+                addNotification({
+                    type: 'info',
+                    title: 'Withdrawal Requested',
+                    message: `Your withdrawal of ${amount} ACR has been submitted. You'll receive ~${tonEquivalent.toFixed(6)} TON`,
+                    time: new Date().toISOString()
+                });
+                
+                showNotification(`Withdrawal request submitted! ${amount} ACR deducted from your balance.`, 'success');
+                
+                document.getElementById('withdrawAmount').value = '';
+                document.getElementById('faucetPayEmail').value = '';
+                calculateWithdrawal();
+                
+                updateWithdrawalHistory();
+                
+            } catch (error) {
+                console.error('Withdrawal error:', error);
+                showNotification('Withdrawal failed: ' + error.message, 'error');
+            }
+        }
+        
+        // Update Withdrawal History
+        async function updateWithdrawalHistory() {
+            if (!firebaseUserId) return;
+            
+            try {
+                const withdrawalsSnapshot = await db.collection('withdrawals')
+                    .where('userId', '==', firebaseUserId)
+                    .orderBy('createdAt', 'desc')
+                    .limit(10)
+                    .get();
+                
+                const container = document.getElementById('withdrawalHistoryList');
+                
+                if (withdrawalsSnapshot.empty) {
+                    container.innerHTML = `
+                        <div class="list-group-item text-center text-muted py-4">
+                            No withdrawals yet
+                        </div>
+                    `;
+                    return;
+                }
+                
+                container.innerHTML = withdrawalsSnapshot.docs.map(doc => {
+                    const w = doc.data();
+                    const date = new Date(w.createdAt);
+                    const statusClass = w.status === 'approved' ? 'text-success' : 
+                                       w.status === 'rejected' ? 'text-danger' : 'text-warning';
+                    const statusIcon = w.status === 'approved' ? 'fa-check-circle' : 
+                                      w.status === 'rejected' ? 'fa-times-circle' : 'fa-clock';
+                    const statusBg = w.status === 'approved' ? 'success' : 
+                                    w.status === 'rejected' ? 'danger' : 'warning';
+                    
+                    return `
+                        <div class="withdrawal-history-item">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <i class="fas ${statusIcon} ${statusClass} me-2"></i>
+                                    <strong>${w.amount} ACR</strong>
+                                </div>
+                                <div>
+                                    <span class="badge bg-${statusBg}">
+                                        ${w.status.charAt(0).toUpperCase() + w.status.slice(1)}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="withdrawal-time">
+                                <i class="far fa-clock me-1"></i>${date.toLocaleString()}
+                            </div>
+                            <div class="withdrawal-ton">
+                                <i class="fab fa-telegram me-1"></i>Receive: ~${w.tonAmount ? w.tonAmount.toFixed(6) : '0.000000'} TON
+                            </div>
+                            <small class="text-muted">To: ${w.email} • Net: ${w.netAmount} ACR</small>
+                        </div>
+                    `;
+                }).join('');
+                
+            } catch (error) {
+                console.error('Update withdrawal history error:', error);
+            }
+        }
+        
+        // Copy Referral Link
+        function copyReferralLink() {
+            const refLink = document.getElementById('referralLink');
+            refLink.select();
+            document.execCommand('copy');
+            
+            if (tg && tg.showAlert) {
+                tg.showAlert("Referral link copied to clipboard!");
+            } else {
+                showNotification('Copied!', 'Referral link copied to clipboard', 'success');
+            }
+        }
+        
+        // Share Referral Link
+        function shareReferralLink() {
+            const refLink = document.getElementById('referralLink').value;
+            const shareText = `Join Ads-Revenue and earn ACR coins by watching ads! Use my referral link: ${refLink}`;
+            
+            if (navigator.share) {
+                navigator.share({
+                    title: 'Ads-Revenue Referral',
+                    text: shareText,
+                    url: refLink
+                });
+            } else {
+                navigator.clipboard.writeText(shareText).then(() => {
+                    showNotification('Copied!', 'Referral message copied to clipboard', 'success');
+                });
+            }
+        }
+        
+        // Redeem Promo Code
+        async function redeemPromoCode() {
+            const codeInput = document.getElementById('promoCodeInput');
+            const code = codeInput.value.trim().toUpperCase();
+            const messageDiv = document.getElementById('promoMessage');
+            
+            if (!code) {
+                messageDiv.className = 'alert alert-warning';
+                messageDiv.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i>Please enter a promo code';
+                messageDiv.classList.remove('d-none');
+                return;
+            }
+            
+            const validCodes = ['WELCOME50', 'BONUS100', 'SPECIAL75'];
+            const bonusAmount = code === 'WELCOME50' ? 50 : code === 'BONUS100' ? 100 : code === 'SPECIAL75' ? 75 : 0;
+            
+            if (!validCodes.includes(code) || bonusAmount === 0) {
+                messageDiv.className = 'alert alert-danger';
+                messageDiv.innerHTML = '<i class="fas fa-times-circle me-2"></i>Invalid promo code. Check the channel for valid codes 😅';
+                messageDiv.classList.remove('d-none');
+                return;
+            }
+            
+            messageDiv.className = 'alert alert-info';
+            messageDiv.innerHTML = `<i class="fas fa-info-circle me-2"></i>To claim ${bonusAmount} ACR, please watch an ad`;
+            messageDiv.classList.remove('d-none');
+            
+            let adShown = false;
+            
+            // Try Adexora
+            if (typeof window.showAdexora === 'function' && !adShown) {
+                try {
+                    await window.showAdexora();
+                    adShown = true;
+                } catch (error) {
+                    console.log('Adexora failed');
+                }
+            }
+            
+            // Try Adexium
+            if (adexiumWidget && !adShown) {
+                try {
+                    await new Promise((resolve, reject) => {
+                        let adsCompleted = 0;
+                        
+                        adexiumWidget.on('adPlaybackCompleted', () => {
+                            adsCompleted++;
+                            if (adsCompleted >= 1) {
+                                resolve();
+                            }
+                        });
+                        
+                        adexiumWidget.on('noAdFound', reject);
+                        adexiumWidget.on('adClosed', reject);
+                        
+                        adexiumWidget.requestAd('interstitial');
+                    });
+                    adShown = true;
+                } catch (error) {
+                    console.log('Adexium failed');
+                }
+            }
+            
+            // Try Onclika
+            if (onclikaShowAd && typeof onclikaShowAd === 'function' && !adShown) {
+                try {
+                    await onclikaShowAd();
+                    adShown = true;
+                } catch (error) {
+                    console.log('Onclika failed');
+                }
+            }
+            
+            if (!adShown) {
+                messageDiv.className = 'alert alert-danger';
+                messageDiv.innerHTML = '<i class="fas fa-times-circle me-2"></i>No ads available. Please try again later.';
+                messageDiv.classList.remove('d-none');
+                return;
+            }
+            
+            // Update balance in Firestore
+            const newBalance = await updateUserBalance(bonusAmount, 'promo_code');
+            
+            if (newBalance !== null) {
+                // Store promo history in localStorage only
+                const promoHistory = JSON.parse(localStorage.getItem('promoHistory') || '[]');
+                promoHistory.unshift({
+                    code: code,
+                    bonus: bonusAmount,
+                    timestamp: new Date().toISOString()
+                });
+                localStorage.setItem('promoHistory', JSON.stringify(promoHistory));
+                
+                messageDiv.className = 'alert alert-success';
+                messageDiv.innerHTML = `<i class="fas fa-check-circle me-2"></i>Promo code redeemed successfully! +${bonusAmount} ACR coins 🎉`;
+                messageDiv.classList.remove('d-none');
+                
+                addNotification({
+                    type: 'success',
+                    title: 'Promo Code Redeemed!',
+                    message: `You received ${bonusAmount} ACR from promo code ${code}`,
+                    time: new Date().toISOString()
+                });
+                
+                codeInput.value = '';
+                
+                updatePromoHistory();
+            } else {
+                messageDiv.className = 'alert alert-danger';
+                messageDiv.innerHTML = '<i class="fas fa-times-circle me-2"></i>Failed to redeem promo code. Please try again.';
+                messageDiv.classList.remove('d-none');
+            }
+        }
+        
+        // Complete Task
+        async function completeTask(taskId) {
+            const taskRewards = {
+                'join_channel': 50,
+                'join_group': 30,
+                'follow_twitter': 25,
+                'visit_website': 20,
+                'invite_friends': 100
+            };
+            
+            const reward = taskRewards[taskId];
+            if (!reward) {
+                showNotification('Invalid task', 'error');
+                return;
+            }
+            
+            const btn = document.getElementById(`task${taskId.charAt(0).toUpperCase() + taskId.slice(1).replace('_', '')}Btn`);
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-check me-1"></i> Completed';
+            }
+            
+            // Update balance in Firestore
+            const newBalance = await updateUserBalance(reward, `task_${taskId}`);
+            
+            if (newBalance !== null) {
+                // Store task history in localStorage only
+                const tasksHistory = JSON.parse(localStorage.getItem('tasksHistory') || '[]');
+                tasksHistory.unshift({
+                    task: taskId,
+                    reward: reward,
+                    timestamp: new Date().toISOString()
+                });
+                localStorage.setItem('tasksHistory', JSON.stringify(tasksHistory));
+                
+                showNotification(`Task completed! You earned ${reward} ACR 🎉`, 'success');
+                
+                updateTasksHistory();
+            }
+        }
+        
+        // Update Tasks History
+        function updateTasksHistory() {
+            const history = JSON.parse(localStorage.getItem('tasksHistory') || '[]');
+            const container = document.getElementById('tasksHistoryList');
+            
+            if (history.length === 0) {
+                container.innerHTML = `
+                    <div class="list-group-item text-center text-muted py-4">
+                        No tasks completed yet
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = history.map(h => {
+                const date = new Date(h.timestamp);
+                const taskNames = {
+                    'join_channel': 'Join Channel',
+                    'join_group': 'Join Group',
+                    'follow_twitter': 'Follow Twitter',
+                    'visit_website': 'Visit Website',
+                    'invite_friends': 'Invite 5 Friends'
+                };
+                
+                return `
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            <span>${taskNames[h.task] || h.task}</span>
+                            <small class="text-muted ms-2">${date.toLocaleDateString()}</small>
+                        </div>
+                        <span class="text-success">+${h.reward} ACR</span>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        // Update Promo History
+        function updatePromoHistory() {
+            const history = JSON.parse(localStorage.getItem('promoHistory') || '[]');
+            const container = document.getElementById('promoHistoryList');
+            
+            if (history.length === 0) {
+                container.innerHTML = `
+                    <div class="list-group-item text-center text-muted py-4">
+                        No promo codes redeemed yet
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = history.map(h => {
+                const date = new Date(h.timestamp);
+                return `
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="fas fa-gift text-success me-2"></i>
+                            <span>${h.code}</span>
+                            <small class="text-muted ms-2">${date.toLocaleDateString()}</small>
+                        </div>
+                        <span class="text-success">+${h.bonus} ACR</span>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        // Show Loading Overlay
+        function showLoadingOverlay(title, message) {
+            document.getElementById('loadingTitle').textContent = title;
+            document.getElementById('loadingMessage').textContent = message;
+            document.getElementById('loadingOverlay').style.display = 'flex';
+        }
+        
+        // Hide Loading Overlay
+        function hideLoadingOverlay() {
+            document.getElementById('loadingOverlay').style.display = 'none';
+        }
+        
+        // Refresh Balance
+        async function refreshBalance() {
+            await loadUserDataFromFirestore();
+            showNotification('Balance refreshed', 'success');
+        }
+        
+        // Show Notification
+        function showNotification(message, type = 'success') {
+            const title = type === 'success' ? 'Success!' : 
+                         type === 'error' ? 'Error!' : 
+                         type === 'warning' ? 'Warning!' : 'Info';
+            
+            addNotification({
+                type: type,
+                title: title,
+                message: message,
+                time: new Date().toISOString()
+            });
+            
+            showToastNotification({
+                type: type,
+                title: title,
+                message: message
+            });
+        }
+        
+        // Format Time Ago
+        function formatTimeAgo(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMs / 3600000);
+            const diffDays = Math.floor(diffMs / 86400000);
+            
+            if (diffMins < 1) return 'just now';
+            if (diffMins < 60) return `${diffMins}m ago`;
+            if (diffHours < 24) return `${diffHours}h ago`;
+            if (diffDays < 7) return `${diffDays}d ago`;
+            return date.toLocaleDateString();
+        }
+        
+        // Initialize Bootstrap Tabs
+        function initBootstrapTabs() {
+            const triggerTabList = [].slice.call(document.querySelectorAll('#mainTab button'));
+            triggerTabList.forEach(function (triggerEl) {
+                const tabTrigger = new bootstrap.Tab(triggerEl);
+                
+                triggerEl.addEventListener('click', function (event) {
+                    event.preventDefault();
+                    tabTrigger.show();
+                });
+            });
+        }
+        
+        // Notification System
+        function addNotification(notification) {
+            notifications.unshift({
+                ...notification,
+                id: Date.now(),
+                read: false
+            });
+            
+            notifications = notifications.slice(0, 20);
+            
+            localStorage.setItem('notifications', JSON.stringify(notifications));
+            
+            updateNotificationBadge();
+            
+            showToastNotification(notification);
+        }
+        
+        function loadNotifications() {
+            notifications = JSON.parse(localStorage.getItem('notifications') || '[]');
+            updateNotificationBadge();
+        }
+        
+        function updateNotificationBadge() {
+            const unreadCount = notifications.filter(n => !n.read).length;
+            const badge = document.getElementById('notificationBadge');
+            
+            if (unreadCount > 0) {
+                badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+                badge.classList.remove('d-none');
+            } else {
+                badge.classList.add('d-none');
+            }
+        }
+        
+        function openNotificationModal() {
+            const modal = document.getElementById('notificationModal');
+            const list = document.getElementById('notificationList');
+            
+            notifications.forEach(n => n.read = true);
+            localStorage.setItem('notifications', JSON.stringify(notifications));
+            updateNotificationBadge();
+            
+            if (notifications.length === 0) {
+                list.innerHTML = `
+                    <div class="text-center text-muted py-5">
+                        <i class="fas fa-bell-slash fa-2x mb-3"></i>
+                        <p>No notifications yet</p>
+                    </div>
+                `;
+            } else {
+                list.innerHTML = notifications.map(n => {
+                    const date = new Date(n.time);
+                    const timeAgo = formatTimeAgo(n.time);
+                    const iconClass = n.type === 'success' ? 'success' : 
+                                     n.type === 'warning' ? 'warning' : 
+                                     n.type === 'error' ? 'error' : 'info';
+                    
+                    return `
+                        <div class="notification-item ${n.read ? '' : 'unread'}">
+                            <div class="notification-icon ${iconClass}">
+                                <i class="fas fa-${n.type === 'success' ? 'check-circle' : 
+                                               n.type === 'warning' ? 'exclamation-triangle' : 
+                                               n.type === 'error' ? 'times-circle' : 'info-circle'}"></i>
+                            </div>
+                            <div style="flex: 1;">
+                                <div class="fw-bold">${n.title}</div>
+                                <div class="text-muted">${n.message}</div>
+                                <div class="notification-time">${timeAgo}</div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+            
+            modal.style.display = 'flex';
+        }
+        
+        function closeNotificationModal() {
+            document.getElementById('notificationModal').style.display = 'none';
+        }
+        
+        function markAllAsRead() {
+            notifications.forEach(n => n.read = true);
+            localStorage.setItem('notifications', JSON.stringify(notifications));
+            updateNotificationBadge();
+            openNotificationModal();
+        }
+        
+        function showToastNotification(notification) {
+            const toast = document.createElement('div');
+            toast.className = `alert alert-${notification.type} notification-overlay`;
+            toast.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                z-index: 1000;
+                max-width: 300px;
+                animation: fadeIn 0.3s ease-in;
+            `;
+            toast.innerHTML = `
+                <i class="fas fa-${notification.type === 'success' ? 'check-circle' : 
+                                 notification.type === 'warning' ? 'exclamation-triangle' : 
+                                 notification.type === 'error' ? 'times-circle' : 'info-circle'} me-2"></i>
+                <strong>${notification.title}</strong><br>
+                <small>${notification.message}</small>
+            `;
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.animation = 'fadeOut 0.5s';
+                setTimeout(() => toast.remove(), 500);
+            }, 5000);
+        }
+        
+        function validateEmail(email) {
+            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return re.test(email);
+        }
+    </script>
+</body>
+</html>
