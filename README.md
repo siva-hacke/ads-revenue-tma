@@ -1,2 +1,2 @@
-# ads-revenue-tma
+earn money # ads-revenue-tma
 Ads Revenue Telegram Mini App   
